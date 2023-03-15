@@ -30,38 +30,38 @@ def get_user(user_id):
         else:
             return jsonify({"error": "User not found"}), 404
 
-@app.route('/users', methods=['GET'])
-def get_users_by_name():
-    name = request.args.get('name')
-    if not name:
-        return jsonify({"error": "Name query parameter is required"}), 400
-
-    users_cursor = mongo.db.users.find({"name": name})
-    users = [{"_id": str(user["_id"]), "name": user["name"], "age": user["age"]} for user in users_cursor]
-
-    return jsonify(users)
-
-#caching by name added
 # @app.route('/users', methods=['GET'])
 # def get_users_by_name():
 #     name = request.args.get('name')
 #     if not name:
 #         return jsonify({"error": "Name query parameter is required"}), 400
 
-#     cache_key = f"name:{name}"
-#     cached_users = redis_client.get(cache_key)
+#     users_cursor = mongo.db.users.find({"name": name})
+#     users = [{"_id": str(user["_id"]), "name": user["name"], "age": user["age"]} for user in users_cursor]
 
-#     if cached_users:
-#         users = eval(cached_users.decode())
-#         return jsonify(users)
-#     else:
-#         users_cursor = mongo.db.users.find({"name": name})
-#         users = [{"_id": str(user["_id"]), "name": user["name"], "age": user["age"]} for user in users_cursor]
+#     return jsonify(users)
 
-#         if users:
-#             redis_client.set(cache_key, str(users))
+#caching by name added
+@app.route('/users', methods=['GET'])
+def get_users_by_name():
+    name = request.args.get('name')
+    if not name:
+        return jsonify({"error": "Name query parameter is required"}), 400
 
-#         return jsonify(users)
+    cache_key = f"name:{name}"
+    cached_users = redis_client.get(cache_key)
+
+    if cached_users:
+        users = eval(cached_users.decode())
+        return jsonify(users)
+    else:
+        users_cursor = mongo.db.users.find({"name": name})
+        users = [{"_id": str(user["_id"]), "name": user["name"], "age": user["age"]} for user in users_cursor]
+
+        if users:
+            redis_client.set(cache_key, str(users))
+
+        return jsonify(users)
 
 
 if __name__ == '__main__':
